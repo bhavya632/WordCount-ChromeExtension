@@ -17,34 +17,33 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
       // Normal pages: selection worked fine
       showCount(tab.id, selection);
     } else {
-      // Try reading selection from ALL frames (handles iframes)
+      // Try reading selection from ALL frames (handles iframes + Google Docs)
       chrome.scripting.executeScript({
         target: { tabId: tab.id, allFrames: true },
-        func: () => window.getSelection().toString()
+        func: () => {
+          const selection = window.getSelection().toString();
+          // Google Docs stores content in a special aria element when nothing
+          // is returned by getSelection() — try that as a fallback
+          if (!selection || selection.trim().length === 0) {
+            const docsSelection = document.querySelector(".kix-selection-overlay");
+            if (docsSelection) {
+              // Get all selected text spans inside Google Docs' editor
+              const selectedSpans = document.querySelectorAll(".kix-lineview-text-block");
+              const text = Array.from(selectedSpans)
+                .map(el => el.textContent)
+                .join(" ");
+              return text.trim();
+            }
+          }
+          return selection;
+        }
       }).then(results => {
-        // Find the first frame that has a non-empty selection
         const match = results.find(r => r.result && r.result.trim().length > 0);
 
         if (match) {
           showCount(tab.id, match.result);
         } else {
-          // Google Docs fallback: read from clipboard
-          chrome.scripting.executeScript({
-            target: { tabId: tab.id },
-            func: async () => {
-              try {
-                const text = await navigator.clipboard.readText();
-                if (!text || text.trim().length === 0) {
-                  alert("No text found.\n\nIn Google Docs:\n1. Select your text\n2. Press Ctrl+C (or Cmd+C) to copy it\n3. Then right-click and choose \"Count Words\"");
-                } else {
-                  const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
-                  alert(`Word Count: ${words} words`);
-                }
-              } catch (e) {
-                alert("Clipboard access was denied.\n\nIn Google Docs:\n1. Select your text\n2. Press Ctrl+C (or Cmd+C) to copy it\n3. Right-click → \"Count Words\"\n4. If prompted, allow clipboard access.");
-              }
-            }
-          }).catch(err => console.error("Script injection failed:", err));
+          alert("No text found. Please select some text and try again.");
         }
       }).catch(err => console.error("Frame script injection failed:", err));
     }
