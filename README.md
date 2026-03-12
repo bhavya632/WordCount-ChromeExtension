@@ -36,4 +36,5 @@ To install this extension manually (Developer Mode):
 Some sites (like Google Docs) override the default right-click menu. To use the extension on these sites:
 - Highlight your text.
 - **Hold the `Shift` key** while you right-click. This forces the browser's native context menu to appear.
+- If it doesn't work, highlight the words, copy it, and then do the above step.
 
