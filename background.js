@@ -40,12 +40,16 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
       }).then(results => {
         const match = results.find(r => r.result && r.result.trim().length > 0);
 
-        if (match) {
-          showCount(tab.id, match.result);
-        } else {
-          alert("No text found. Please select some text and try again.");
-        }
-      }).catch(err => console.error("Frame script injection failed:", err));
+              if (match) {
+                showCount(tab.id, match.result);
+              } else {
+                // Inject alert into the page context
+                chrome.scripting.executeScript({
+                  target: { tabId: tab.id },
+                  func: () => alert("No text found. Please select some text and try again.")
+                });
+              }
+            }).catch(err => console.error("Frame script injection failed:", err));
     }
   }
 });
