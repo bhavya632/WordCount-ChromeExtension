@@ -1,3 +1,5 @@
+## Update - count characters
+
 # Quick Word Counter Chrome Extension
 
 A lightweight Chrome Extension that allows you to count words in any highlighted text directly from the right-click context menu. No copy-pasting required!
